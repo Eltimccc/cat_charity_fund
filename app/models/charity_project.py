@@ -9,7 +9,7 @@ class CharityProject(Base):
 
     name = Column(String(100),unique=True, nullable=False)
     description = Column(Text)
-    full_amount = Column(Integer, unsigned=True)
+    full_amount = Column(Integer)
     invested_amount = Column(Integer, default=0)
     fully_invested = Column(Boolean, default=False)
     create_date = Column(DateTime,
