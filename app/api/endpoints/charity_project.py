@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy import func, select
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,27 +9,47 @@ from app.crud.charity_project import charity_project_crud
 
 from app.api.validators import check_name_duplicate, check_charity_project_exists
 from app.schemas.charity_project import (
-    CharityProjectCreate, CharityProjectDB, CharityProjectUpdate
+    CharityProjectCreate, CharityProjectDB, CharityProjectUpdate, CharityProjectCreateResponse, CharityProjectCreateRequest
 )
 from app.core.user import current_superuser
+
+from app.models import Donation
+from app.services.invest import create_project
+
+
 
 router = APIRouter()
 
 
 @router.post(
     '/',
-    response_model=CharityProjectDB,
-    response_model_exclude_none=True,
+    response_model=CharityProjectCreateResponse,
     dependencies=[Depends(current_superuser)]
 )
 async def create_new_charity_project(
-        charity_project: CharityProjectCreate,
+        charity_project: CharityProjectCreateRequest,
         session: AsyncSession = Depends(get_async_session),
 ):
     """Только для суперюзеров."""
     await check_name_duplicate(charity_project.name, session)
-    new_project = await charity_project_crud.create(charity_project, session)
-    return new_project
+    new_project = await create_project(charity_project, session)
+    return CharityProjectCreateResponse(**new_project.__dict__)
+
+
+# @router.post(
+#     '/',
+#     response_model=CharityProjectCreateResponse,
+#     dependencies=[Depends(current_superuser)]
+# )
+# async def create_new_charity_project(
+#         charity_project: CharityProjectCreateRequest,
+#         session: AsyncSession = Depends(get_async_session),
+# ):
+#     """Только для суперюзеров."""
+#     await check_name_duplicate(charity_project.name, session)
+#     new_project = await charity_project_crud.create(charity_project, session)
+
+#     return CharityProjectCreateResponse(**new_project.__dict__)
 
 
 @router.get(
@@ -59,8 +80,6 @@ async def partially_update_charity_project(
         charity_project_id, session
     )
 
-    if obj_in.name is not None:
-        await check_name_duplicate(obj_in.name, session)
 
     charity_project = await charity_project_crud.update(
         charity_project, obj_in, session

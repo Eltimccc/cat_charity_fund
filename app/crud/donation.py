@@ -6,13 +6,15 @@ from app.models import Donation, User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_, select
 from typing import Optional
+from sqlalchemy.orm import selectinload
+
+from app.schemas.donation import DonationMyDB
 
 
 class CRUDDonation(CRUDBase):
 
-    async def get_donation_by_username(
+    async def get_all_donation(
             self,
-
             user_id: int,
             session: AsyncSession,
     ) -> Optional[int]:
@@ -24,6 +26,26 @@ class CRUDDonation(CRUDBase):
             )
         )
         db_donation_id = db_donation_id.scalars().first()
+        # print('Get all donations')
         return db_donation_id
 
+
+    async def get_by_user(
+            self, session: AsyncSession, user: User
+            ):
+        donations = await session.execute(
+            select(Donation
+                   ).where(
+            Donation.user_id == user.id)
+            )
+        donations_list = [
+            donation.__dict__
+            for donation in donations.scalars().all()
+            ]
+        donations_db = [DonationMyDB(**donation_dict)
+                        for donation_dict in donations_list]
+        return donations_db
+
 donation_crud = CRUDDonation(Donation)
+        
+

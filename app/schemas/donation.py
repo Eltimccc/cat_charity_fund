@@ -28,3 +28,8 @@ class DonationDB(DonationBase):
     class Config:
         orm_mode = True
 
+class DonationMyDB(BaseModel):
+    full_amount: int
+    comment: str
+    id: int
+    create_date: datetime
