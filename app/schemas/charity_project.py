@@ -26,6 +26,9 @@ class CharityProjectCreateResponse(CharityProjectBase):
     invested_amount: int = Field(default=0, ge=0)
     fully_invested: bool = Field(default=False)
 
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
 
 class CharityProjectCreate(CharityProjectBase):
     name: str = Field(..., min_length=1, max_length=100)

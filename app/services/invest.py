@@ -1,39 +1,47 @@
+from datetime import datetime
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
-from typing import List, Tuple
+from typing import List, Tuple, Type
 from app.core.db import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Donation, CharityProject
-from app.schemas.charity_project import CharityProjectCreateRequest
+from app.schemas.charity_project import CharityProjectCreateRequest, CharityProjectCreateResponse
 from app.crud.charity_project import charity_project_crud
 
 
-'''ДОДЕЛАТЬ!!'''
-
-
-async def create_project(
-    charity_project: CharityProjectCreateRequest,
+async def allocate_donations(
+    project: CharityProjectCreateResponse,
+    donation_model: Type[Donation],
     session: AsyncSession
-) -> Tuple[CharityProject, List[Donation]]:
-    async with session.begin():
-        unallocated_donations = await session.execute(select(Donation).where(
-            and_(
-                Donation.fully_invested == False,
-                Donation.invested_amount == 0
-            )
-        )).scalars().all()
+) -> CharityProjectCreateResponse:
+    """Распределение донатов."""
 
-        full_amount = charity_project.full_amount
-        total_amount = 0
-        for donation in unallocated_donations:
-            if total_amount >= full_amount:
-                break
-            donation.invested_amount = donation.full_amount
+    unallocated_donations = await session.execute(
+        select(donation_model).where(
+            donation_model.fully_invested == False
+        ).order_by(donation_model.create_date)
+    )
+    unallocated_donations = unallocated_donations.scalars().all()
+
+    amount_left = sum(donation.full_amount - donation.invested_amount for donation in unallocated_donations)
+    for donation in unallocated_donations:
+        amount_to_invest = min(project.full_amount - project.invested_amount, donation.full_amount - donation.invested_amount, amount_left)
+        project.invested_amount += amount_to_invest
+        donation.invested_amount += amount_to_invest
+        amount_left -= amount_to_invest
+        if project.invested_amount >= project.full_amount:
+            project.fully_invested = True
+            project.close_date = datetime.now()
+        if donation.invested_amount >= donation.full_amount:
             donation.fully_invested = True
-            total_amount += donation.full_amount
+            donation.close_date = datetime.now()
+        session.add(project)
+        session.add(donation)
+        if amount_left == 0:
+            break
 
-        new_project = await charity_project_crud.create(charity_project, session)
-        await session.commit()
+    await session.commit()
+    await session.refresh(project)
 
-        return new_project, unallocated_donations
+    return project

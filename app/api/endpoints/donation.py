@@ -19,7 +19,7 @@ from app.models import Donation, CharityProject
 # from app.services.invest import invest
 from sqlalchemy.future import select
 
-from app.services.invest import create_project
+# from app.services.invest import create_project
 # from app.api.dependencies import get_db, get_current_user
 
 router = APIRouter()
@@ -39,11 +39,9 @@ async def create_new_donation(
 
     new_donation = await donation_crud.create(donation, session, user)
 
-    # Получаем список проектов из базы данных
     projects = await session.execute(select(CharityProject))
     projects = projects.scalars().all()
 
-    # Распределяем сумму пожертвования по проектам
     amount_left = new_donation.full_amount
     for project in projects:
         if project.fully_invested:
