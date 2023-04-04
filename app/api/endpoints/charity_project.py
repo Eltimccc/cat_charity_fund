@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,7 +6,7 @@ from app.core.db import get_async_session
 from app.crud.charity_project import charity_project_crud
 from app.api.validators import check_name_duplicate, check_charity_project_exists
 from app.schemas.charity_project import (
-    CharityProjectDB, CharityProjectUpdate, CharityProjectCreateResponse, CharityProjectCreateRequest
+    CharityProjectBase, CharityProjectDB, CharityProjectUpdate, CharityProjectCreateResponse, CharityProjectCreateRequest
 )
 from app.core.user import current_superuser
 from app.models import Donation
@@ -37,7 +37,7 @@ async def create_new_charity_project(
 
 @router.get(
     '/',
-    response_model=list[CharityProjectDB],
+    response_model=list[CharityProjectBase],
     response_model_exclude_none=True,
 )
 async def get_all_charity_project(
@@ -51,6 +51,7 @@ async def get_all_charity_project(
     '/{charity_project_id}',
     response_model=CharityProjectDB,
     response_model_exclude_none=True,
+    status_code=200,
     dependencies=[Depends(current_superuser)],
 )
 async def partially_update_charity_project(

@@ -12,8 +12,8 @@ async def check_name_duplicate(
     charity_project_id = await charity_project_crud.get_charity_project(charity_project, session)
     if charity_project_id is not None:
         raise HTTPException(
-            status_code=422,
-            detail='Такое имя уже существует!',
+            status_code=400,
+            detail='Проект с таким именем уже существует!',
         )
     
 

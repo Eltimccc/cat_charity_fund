@@ -22,7 +22,7 @@ class CRUDBase:
                 self.model.id == obj_id
             )
         )
-        print('get base')
+
         return db_obj.scalars().first()
 
     async def get_multi(
@@ -30,7 +30,6 @@ class CRUDBase:
             session: AsyncSession
     ):
         db_objs = await session.execute(select(self.model))
-        print('get all in crud base')
         return db_objs.scalars().all()
 
     async def create(
@@ -44,7 +43,6 @@ class CRUDBase:
             obj_in_data['user_id'] = user.id
         db_obj = self.model(**obj_in_data)
         session.add(db_obj)
-        print('create base')
         await session.commit()
         await session.refresh(db_obj)
         return db_obj

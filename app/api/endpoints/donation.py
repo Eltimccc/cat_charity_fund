@@ -1,30 +1,22 @@
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
-from app.api.validators import check_name_duplicate
+
 from app.core.db import get_async_session
-from app.crud.donation import CRUDDonation, donation_crud
-from app.crud.charity_project import charity_project_crud
+from app.crud.donation import donation_crud
 from app.core.user import current_superuser
-from app.schemas.charity_project import CharityProjectCreateRequest, CharityProjectCreateResponse
 from app.schemas.donation import DonationDB, DonationCreate, DonationMyDB
-from app.models.donation import Donation
 from app.core.user import current_user
 from app.models import User
+from app.models import CharityProject
 
-from sqlalchemy.orm import Session, selectinload
-from app.models import Donation, CharityProject
-# from app.services.invest import invest
-from sqlalchemy.future import select
-
-# from app.services.invest import create_project
-# from app.api.dependencies import get_db, get_current_user
 
 router = APIRouter()
 
-### вот эту переделать тоже
+
 @router.post(
     '/',
     response_model=DonationDB,
@@ -63,24 +55,6 @@ async def create_new_donation(
     await session.commit()
 
     return new_donation
-
-
-# @router.post(
-#     '/',
-#     response_model=DonationDB,
-#     response_model_exclude_none=True,
-# )
-# async def create_new_donation(
-#         charity_project: DonationCreate,
-#         session: AsyncSession = Depends(get_async_session),
-#         user: User = Depends(current_user)
-# ):
-#     """Для пользователей."""
-
-#     new_donation = await donation_crud.create(
-#         charity_project, session, user
-#     )
-#     return new_donation
 
 
 @router.get(

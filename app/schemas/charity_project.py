@@ -1,13 +1,29 @@
 # app/schemas/charityproject.py
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, PositiveInt
 
 
 class CharityProjectBase(BaseModel):
+    create_date: Optional[datetime]
+    description: str = Field(..., min_length=1)
+    full_amount: PositiveInt
+    fully_invested: bool = Field(default=False)
+    id: Optional[int] = Field(None, title="id")
+    invested_amount: int = Field(default=0, ge=0)
+    name: str = Field(..., min_length=1, max_length=100)
+    
+
+class CharityProjectCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     description: str = Field(..., min_length=1)
-    full_amount: Optional[int] = 0
+    full_amount: PositiveInt
+
+
+class CharityProjectDeleteResponse(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    description: str = Field(..., min_length=1)
+    full_amount: PositiveInt
     id: Optional[int] = Field(None, title="id")
     invested_amount: int = Field(default=0, ge=0)
     fully_invested: bool = Field(default=False)
@@ -15,16 +31,14 @@ class CharityProjectBase(BaseModel):
     close_date: Optional[datetime]
 
 
-class CharityProjectCreateRequest(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100)
-    description: str = Field(..., min_length=1)
-    full_amount: Optional[int] = 0
-
-
 class CharityProjectCreateResponse(CharityProjectBase):
-    id: int
-    invested_amount: int = Field(default=0, ge=0)
+    description: str = Field(..., min_length=1)
+    full_amount: PositiveInt
     fully_invested: bool = Field(default=False)
+    id: Optional[int] = Field(None, title="id")
+    invested_amount: int = Field(default=0, ge=0)
+    name: str = Field(..., min_length=1, max_length=100)
+
 
     class Config:
         orm_mode = True
@@ -42,6 +56,12 @@ class CharityProjectUpdate(CharityProjectBase):
             raise ValueError('Имя не может быть пустым!')
         return value
 
+    @validator('full_amount', always=True)
+    def check_full_amount(cls, value, values):
+        if 'invested_amount' in values and value < values['invested_amount']:
+            raise ValueError('Требуемая сумма не может быть меньше внесенной!')
+        else:
+            return value
 
 class CharityProjectDB(CharityProjectCreate):
     id: int

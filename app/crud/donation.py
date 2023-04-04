@@ -26,7 +26,7 @@ class CRUDDonation(CRUDBase):
             )
         )
         db_donation_id = db_donation_id.scalars().first()
-        # print('Get all donations')
+
         return db_donation_id
 
 
