@@ -49,19 +49,21 @@ class CharityProjectCreate(CharityProjectBase):
 
 
 class CharityProjectUpdate(CharityProjectBase):
-    
+    invested_amount: int = Field(default=0, ge=0)
+
     @validator('name')
     def name_cannot_be_null(cls, value):
         if value is None:
             raise ValueError('Имя не может быть пустым!')
         return value
 
-    @validator('full_amount', always=True)
-    def check_full_amount(cls, value, values):
-        if 'invested_amount' in values and value < values['invested_amount']:
+    @validator('full_amount')
+    def check_full_amount(cls, value, values, field):
+        invested_amount = values.get('invested_amount')
+        if invested_amount is not None and value < invested_amount:
             raise ValueError('Требуемая сумма не может быть меньше внесенной!')
-        else:
-            return value
+        return value
+
 
 class CharityProjectDB(CharityProjectCreate):
     id: int

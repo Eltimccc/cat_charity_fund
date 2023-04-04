@@ -32,3 +32,6 @@ class CharityProject(Base):
                          default=datetime.now())
     close_date = Column(DateTime,
                         default=datetime.now())
+
+    def can_delete(self):
+        return self.invested_amount == 0
