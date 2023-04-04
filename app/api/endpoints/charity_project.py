@@ -21,21 +21,6 @@ from app.services.invest import create_project
 router = APIRouter()
 
 
-@router.post(
-    '/',
-    response_model=CharityProjectCreateResponse,
-    dependencies=[Depends(current_superuser)]
-)
-async def create_new_charity_project(
-        charity_project: CharityProjectCreateRequest,
-        session: AsyncSession = Depends(get_async_session),
-):
-    """Только для суперюзеров."""
-    await check_name_duplicate(charity_project.name, session)
-    new_project = await create_project(charity_project, session)
-    return CharityProjectCreateResponse(**new_project.__dict__)
-
-
 # @router.post(
 #     '/',
 #     response_model=CharityProjectCreateResponse,
@@ -47,9 +32,24 @@ async def create_new_charity_project(
 # ):
 #     """Только для суперюзеров."""
 #     await check_name_duplicate(charity_project.name, session)
-#     new_project = await charity_project_crud.create(charity_project, session)
-
+#     new_project = await create_project(charity_project, session)
 #     return CharityProjectCreateResponse(**new_project.__dict__)
+
+
+@router.post(
+    '/',
+    response_model=CharityProjectCreateResponse,
+    dependencies=[Depends(current_superuser)]
+)
+async def create_new_charity_project(
+        charity_project: CharityProjectCreateRequest,
+        session: AsyncSession = Depends(get_async_session),
+):
+    """Только для суперюзеров."""
+    await check_name_duplicate(charity_project.name, session)
+    new_project = await charity_project_crud.create(charity_project, session)
+
+    return CharityProjectCreateResponse(**new_project.__dict__)
 
 
 @router.get(
