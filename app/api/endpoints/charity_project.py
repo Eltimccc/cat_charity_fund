@@ -1,13 +1,17 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
 from app.crud.charity_project import charity_project_crud
-from app.api.validators import check_name_duplicate, check_charity_project_exists
-from app.schemas.charity_project import (
-    CharityProjectBase, CharityProjectDB, CharityProjectDeleteResponse, CharityProjectUpdate, CharityProjectCreateResponse, CharityProjectCreateRequest
-)
+from app.api.validators import (check_charity_project_has_investment,
+                                check_name_duplicate,
+                                check_charity_project_exists,
+                                validate_project_updated_amount)
+from app.schemas.charity_project import (CharityProjectCreate,
+                                        CharityProjectDB,
+                                        CharityProjectUpdate)
 from app.core.user import current_superuser
 from app.models import Donation
 from app.services.invest import allocate_donations
@@ -18,21 +22,18 @@ router = APIRouter()
 
 @router.post(
     '/',
-    response_model=CharityProjectCreateRequest,
+    response_model=CharityProjectDB,
     dependencies=[Depends(current_superuser)]
 )
 async def create_new_charity_project(
-        charity_project: CharityProjectCreateRequest,
+        charity_project: CharityProjectCreate,
         session: AsyncSession = Depends(get_async_session),
 ):
     """Только для суперюзеров."""
     await check_name_duplicate(charity_project.name, session)
-    
     new_project = await charity_project_crud.create(charity_project, session)
     new_project = await allocate_donations(new_project, Donation, session)
-
-    response = CharityProjectCreateResponse.from_orm(new_project)
-    return response
+    return new_project
 
 
 @router.get(
@@ -51,7 +52,6 @@ async def get_all_charity_project(
     '/{charity_project_id}',
     response_model=CharityProjectDB,
     response_model_exclude_none=True,
-    status_code=200,
     dependencies=[Depends(current_superuser)],
 )
 async def partially_update_charity_project(
@@ -64,6 +64,11 @@ async def partially_update_charity_project(
         charity_project_id, session
     )
 
+    validate_project_updated_amount(obj_in.full_amount,
+                                    charity_project.invested_amount,
+                                    session)
+
+
     charity_project = await charity_project_crud.update(
         charity_project, obj_in, session
     )
@@ -72,7 +77,7 @@ async def partially_update_charity_project(
 
 @router.delete(
     '/{charity_project_id}',
-    response_model=CharityProjectDeleteResponse,
+    response_model=CharityProjectDB,
     response_model_exclude_none=True,
     dependencies=[Depends(current_superuser)],
 )
@@ -84,7 +89,8 @@ async def remove_charity_project(
     charity_project = await check_charity_project_exists(
         charity_project_id, session
     )
-    if not charity_project.can_delete():
-        raise HTTPException(status_code=400, detail="Нельзя удалить проект с деньгами")
+    await check_charity_project_has_investment(charity_project, session)
+
     charity_project = await charity_project_crud.remove(charity_project, session)
+
     return charity_project

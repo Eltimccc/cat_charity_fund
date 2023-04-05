@@ -52,6 +52,7 @@ async def create_new_donation(
     new_donation.fully_invested = (amount_left == 0)
     new_donation.close_date = datetime.now()
     session.add(new_donation)
+    print(new_donation.create_date)
     await session.commit()
 
     return new_donation

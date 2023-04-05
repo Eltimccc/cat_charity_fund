@@ -6,15 +6,15 @@ from app.core.db import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Donation, CharityProject
-from app.schemas.charity_project import CharityProjectCreateRequest, CharityProjectCreateResponse
+from app.schemas.charity_project import CharityProjectCreate
 from app.crud.charity_project import charity_project_crud
 
 
 async def allocate_donations(
-    project: CharityProjectCreateResponse,
+    project: CharityProjectCreate,
     donation_model: Type[Donation],
     session: AsyncSession
-) -> CharityProjectCreateResponse:
+) -> CharityProjectCreate:
     """Распределение донатов."""
 
     unallocated_donations = await session.execute(
