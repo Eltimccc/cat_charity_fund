@@ -17,7 +17,7 @@ async def check_name_duplicate(
     )
     if charity_project_id is not None:
         raise HTTPException(
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
             detail='Проект с таким именем уже существует!',
         )
 
@@ -30,7 +30,7 @@ async def check_charity_project_exists(
         charity_project_id, session)
     if charity_project is None:
         raise HTTPException(
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
             detail='ID не найдено!'
         )
     return charity_project
@@ -42,7 +42,7 @@ async def validate_project_not_fully_invested(
 ):
     if project.fully_invested:
         raise HTTPException(
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
             detail='Закрытый проект нельзя редактировать!'
         )
     return project
