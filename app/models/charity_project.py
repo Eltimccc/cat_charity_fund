@@ -1,13 +1,14 @@
 from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
+from app.core.config import MAX_LENGTH_NAME
 
 from app.core.db import Base
 
 
 class CharityProject(Base):
 
-    name = Column(String(100), unique=True, nullable=False)
+    name = Column(String(MAX_LENGTH_NAME), unique=True, nullable=False)
     description = Column(Text)
     full_amount = Column(Integer)
     id = Column(Integer, primary_key=True, index=True)

@@ -37,7 +37,7 @@ class CRUDDonation(CRUDBase):
                 Donation.user_id == user.id)
         )
         donations_list = [
-            donation.__dict__
+            vars(donation)
             for donation in donations.scalars().all()
         ]
         donations_db = [DonationMyDB(**donation_dict)

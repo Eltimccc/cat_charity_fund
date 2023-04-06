@@ -4,6 +4,10 @@ from typing import Optional
 from pydantic import BaseSettings, EmailStr
 
 
+LIFETIME = 3600
+MAX_LENGTH_NAME = 100
+
+
 class Settings(BaseSettings):
     app_title: str = 'QRKot'
     description: str = 'Благотворительный'

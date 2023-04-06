@@ -18,9 +18,9 @@ router = APIRouter()
     '/',
     response_model=DonationDB,
     response_model_exclude_none=True,
-    response_model_exclude=['user_id',
+    response_model_exclude=('user_id',
                             'fully_invested',
-                            'invested_amount'],
+                            'invested_amount'),
 )
 async def create_new_donation(
         donation: DonationCreate,
