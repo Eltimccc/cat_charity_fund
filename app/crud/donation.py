@@ -2,9 +2,7 @@
 from typing import Optional
 
 from sqlalchemy import and_, select
-# from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models import Donation, User

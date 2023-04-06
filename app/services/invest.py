@@ -50,7 +50,7 @@ async def allocate_donations(
     unallocated_donations = (
         await session.execute(
             select(donation_model)
-            .where(donation_model.fully_invested == False)
+            .where(donation_model.fully_invested.is_(False))
             .order_by(donation_model.create_date)
         )
     ).scalars().all()

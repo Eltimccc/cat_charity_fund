@@ -29,6 +29,7 @@ class DonationDB(DonationBase):
     class Config:
         orm_mode = True
 
+
 class DonationMyDB(BaseModel):
     full_amount: PositiveInt
     comment: str
