@@ -1,13 +1,11 @@
 from datetime import datetime
-from sqlalchemy import and_, select
-from sqlalchemy.orm import Session
-from typing import List, Tuple, Type
-from app.core.db import get_async_session
+from typing import Type
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Donation, CharityProject
+from app.models import Donation
 from app.schemas.charity_project import CharityProjectCreate
-from app.crud.charity_project import charity_project_crud
 
 
 async def allocate_donations(
@@ -26,7 +24,13 @@ async def allocate_donations(
 
     amount_left = sum(donation.full_amount - donation.invested_amount for donation in unallocated_donations)
     for donation in unallocated_donations:
-        amount_to_invest = min(project.full_amount - project.invested_amount, donation.full_amount - donation.invested_amount, amount_left)
+        amount_to_invest = min(
+            project.full_amount -
+            project.invested_amount,
+            donation.full_amount -
+            donation.invested_amount,
+            amount_left
+        )
         project.invested_amount += amount_to_invest
         donation.invested_amount += amount_to_invest
         amount_left -= amount_to_invest
@@ -36,8 +40,10 @@ async def allocate_donations(
         if donation.invested_amount >= donation.full_amount:
             donation.fully_invested = True
             donation.close_date = datetime.now()
+        
         session.add(project)
         session.add(donation)
+        
         if amount_left == 0:
             break
 

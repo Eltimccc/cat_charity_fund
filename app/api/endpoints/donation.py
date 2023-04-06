@@ -1,18 +1,15 @@
-from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
-
-from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime
 from typing import List
 
-from app.core.db import get_async_session
-from app.crud.donation import donation_crud
-from app.core.user import current_superuser
-from app.schemas.donation import DonationDB, DonationCreate, DonationMyDB
-from app.core.user import current_user
-from app.models import User
-from app.models import CharityProject
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
+from app.core.db import get_async_session
+from app.core.user import current_superuser, current_user
+from app.crud.donation import donation_crud
+from app.models import CharityProject, User
+from app.schemas.donation import DonationCreate, DonationDB, DonationMyDB
 
 router = APIRouter()
 
@@ -21,14 +18,15 @@ router = APIRouter()
     '/',
     response_model=DonationDB,
     response_model_exclude_none=True,
+    response_model_exclude=['user_id',
+                            'fully_invested',
+                            'invested_amount'],
 )
 async def create_new_donation(
         donation: DonationCreate,
         session: AsyncSession = Depends(get_async_session),
         user: User = Depends(current_user)
 ):
-    """Для пользователей."""
-
     new_donation = await donation_crud.create(donation, session, user)
 
     projects = await session.execute(select(CharityProject))
@@ -52,9 +50,9 @@ async def create_new_donation(
     new_donation.fully_invested = (amount_left == 0)
     new_donation.close_date = datetime.now()
     session.add(new_donation)
-    print(new_donation.create_date)
-    await session.commit()
 
+    await session.commit()
+    await session.refresh(new_donation)
     return new_donation
 
 
@@ -67,7 +65,6 @@ async def create_new_donation(
 async def get_all_donation(
         session: AsyncSession = Depends(get_async_session),
 ):
-    ''' Только для суперюзеров. '''
     all_donation = await donation_crud.get_multi(session)
     return all_donation
 
@@ -80,7 +77,6 @@ async def get_my_donation(
         session: AsyncSession = Depends(get_async_session),
         user: User = Depends(current_user)
 ):
-    """Получает список всех донатов текущего пользователя."""
     reservations = await donation_crud.get_by_user(
         session=session, user=user
     )
