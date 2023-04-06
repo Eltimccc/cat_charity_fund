@@ -12,7 +12,9 @@ async def check_name_duplicate(
         charity_project: str,
         session: AsyncSession,
 ) -> None:
-    charity_project_id = await charity_project_crud.get_charity_project(charity_project, session)
+    charity_project_id = await charity_project_crud.get_charity_project(
+        charity_project, session
+    )
     if charity_project_id is not None:
         raise HTTPException(
             status_code=400,
@@ -24,7 +26,8 @@ async def check_charity_project_exists(
         charity_project_id: int,
         session: AsyncSession,
 ) -> CharityProject:
-    charity_project = await charity_project_crud.get(charity_project_id, session)
+    charity_project = await charity_project_crud.get(
+        charity_project_id, session)
     if charity_project is None:
         raise HTTPException(
             status_code=404,
@@ -45,7 +48,10 @@ async def validate_project_not_fully_invested(
     return project
 
 
-def validate_project_updated_amount(new_amount: int, current_amount: int, session) -> None:
+def validate_project_updated_amount(new_amount: int,
+                                    current_amount: int,
+                                    session
+                                    ) -> None:
     if new_amount < current_amount:
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,

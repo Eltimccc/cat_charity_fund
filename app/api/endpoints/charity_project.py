@@ -30,9 +30,12 @@ async def create_new_charity_project(
         charity_project: CharityProjectCreate,
         session: AsyncSession = Depends(get_async_session),
 ):
-    await check_name_duplicate(charity_project.name, session)
-    new_project = await charity_project_crud.create(charity_project, session)
-    new_project = await allocate_donations(new_project, Donation, session)
+    await check_name_duplicate(
+        charity_project.name, session)
+    new_project = await charity_project_crud.create(
+        charity_project, session)
+    new_project = await allocate_donations(
+        new_project, Donation, session)
     return new_project
 
 
@@ -91,13 +94,16 @@ async def partially_update_charity_project(
 )
 async def remove_charity_project(
         charity_project_id: int,
-        session: AsyncSession = Depends(get_async_session),
+        session: AsyncSession = Depends(
+            get_async_session),
 ):
     charity_project = await check_charity_project_exists(
         charity_project_id, session
     )
-    await check_charity_project_has_investment(charity_project, session)
+    await check_charity_project_has_investment(
+        charity_project, session)
 
-    charity_project = await charity_project_crud.remove(charity_project, session)
+    charity_project = await charity_project_crud.remove(
+        charity_project, session)
 
     return charity_project

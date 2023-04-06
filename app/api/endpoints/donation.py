@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends
@@ -6,10 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.core.db import get_async_session
-from app.core.user import current_superuser, current_user
+from app.core.user import (current_superuser,
+                           current_user)
 from app.crud.donation import donation_crud
 from app.models import CharityProject, User
-from app.schemas.donation import DonationCreate, DonationDB, DonationMyDB
+from app.schemas.donation import (DonationCreate,
+                                  DonationDB,
+                                  DonationMyDB)
+from app.services.invest import add_new_donation_to_db
 
 router = APIRouter()
 
@@ -32,27 +35,8 @@ async def create_new_donation(
     projects = await session.execute(select(CharityProject))
     projects = projects.scalars().all()
 
-    amount_left = new_donation.full_amount
-    for project in projects:
-        if project.fully_invested:
-            continue
-        amount_to_invest = min(project.full_amount - project.invested_amount, amount_left)
-        project.invested_amount += amount_to_invest
-        amount_left -= amount_to_invest
-        if project.invested_amount >= project.full_amount:
-            project.fully_invested = True
-            project.close_date = datetime.now()
-        session.add(project)
-        if amount_left == 0:
-            break
+    await add_new_donation_to_db(new_donation, projects, session)
 
-    new_donation.invested_amount = new_donation.full_amount - amount_left
-    new_donation.fully_invested = (amount_left == 0)
-    new_donation.close_date = datetime.now()
-    session.add(new_donation)
-
-    await session.commit()
-    await session.refresh(new_donation)
     return new_donation
 
 
