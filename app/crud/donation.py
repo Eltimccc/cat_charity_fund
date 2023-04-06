@@ -30,23 +30,21 @@ class CRUDDonation(CRUDBase):
 
         return db_donation_id
 
-
     async def get_by_user(
             self, session: AsyncSession, user: User
-            ):
+    ):
         donations = await session.execute(
             select(Donation
                    ).where(
-            Donation.user_id == user.id)
-            )
+                Donation.user_id == user.id)
+        )
         donations_list = [
             donation.__dict__
             for donation in donations.scalars().all()
-            ]
+        ]
         donations_db = [DonationMyDB(**donation_dict)
                         for donation_dict in donations_list]
         return donations_db
 
-donation_crud = CRUDDonation(Donation)
-        
 
+donation_crud = CRUDDonation(Donation)

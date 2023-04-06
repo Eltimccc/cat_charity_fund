@@ -11,14 +11,14 @@ from app.schemas.donation import DonationDB
 
 
 async def add_new_donation_to_db(donation: DonationDB,
-                             projects: List[CharityProject],
-                             session: AsyncSession):
+                                 projects: List[CharityProject],
+                                 session: AsyncSession):
     amount_left = donation.full_amount
     for project in projects:
         if project.fully_invested:
             continue
-        amount_to_invest = min(project.full_amount
-                               - project.invested_amount,
+        amount_to_invest = min(project.full_amount -
+                               project.invested_amount,
                                amount_left)
         project.invested_amount += amount_to_invest
         amount_left -= amount_to_invest
